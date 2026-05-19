@@ -1,0 +1,38 @@
+{
+  "holidays": [
+    {
+      "id": 1,
+      "person": "Alexander Joossens",
+      "startDate": "2026-05-20",
+      "endDate": "2026-05-22",
+      "type": "Annual Leave",
+      "createdAt": "2026-05-19T08:00:00Z"
+    },
+    {
+      "id": 2,
+      "person": "Alvaro Pena",
+      "startDate": "2026-05-25",
+      "endDate": "2026-05-27",
+      "type": "Annual Leave",
+      "createdAt": "2026-05-19T08:00:00Z"
+    },
+    {
+      "id": 3,
+      "person": "Edwin Brinza",
+      "startDate": "2026-05-15",
+      "endDate": "2026-05-16",
+      "type": "Personal Day",
+      "createdAt": "2026-05-19T08:00:00Z"
+    },
+    {
+      "id": 4,
+      "person": "Jairaj Kumar",
+      "startDate": "2026-06-01",
+      "endDate": "2026-06-05",
+      "type": "Annual Leave",
+      "createdAt": "2026-05-19T08:00:00Z"
+    }
+  ],
+  "lastUpdated": "2026-05-19T08:00:00Z",
+  "version": "1.0"
+}
