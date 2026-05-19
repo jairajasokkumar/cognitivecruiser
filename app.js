@@ -13,56 +13,58 @@ const teamMembers = [
 // Current logged-in user (in production, this would come from authentication)
 let currentUser = 'Alexander Joossens';
 
-// Holidays data - loaded from JSON file
+// Holidays data - loaded from server API
 let holidays = [];
-let nextHolidayId = 1;
 
 let currentDate = new Date();
 let currentMonth = currentDate.getMonth();
 let currentYear = currentDate.getFullYear();
 let selectedFilter = 'all';
 
-// Load holidays from JSON file
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// API base URL
+const API_URL = 'http://localhost:3000/api/holidays';
+
+// Load holidays from server API
 async function loadHolidays() {
     try {
-        const response = await fetch('holidays.json');
+        const response = await fetch(API_URL);
         const data = await response.json();
         holidays = data.holidays || [];
-        nextHolidayId = holidays.length > 0 ? Math.max(...holidays.map(h => h.id)) + 1 : 1;
         renderCalendar();
     } catch (error) {
         console.error('Error loading holidays:', error);
+        alert('⚠️ Could not connect to server. Please make sure the server is running:\n\nnpm start');
         holidays = [];
         renderCalendar();
     }
 }
 
-// Save holidays to JSON file (requires server-side implementation)
-async function saveHolidays() {
-    const data = {
-        holidays: holidays,
-        lastUpdated: new Date().toISOString(),
-        version: "1.0"
-    };
-    
-    // For local development: Download updated JSON file
-    const dataStr = JSON.stringify(data, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'holidays.json';
-    link.click();
-    
-    // Also save to localStorage as backup
-    localStorage.setItem('toyotaHolidays', JSON.stringify(holidays));
-    
-    console.log('✅ Holidays saved! Please replace the holidays.json file with the downloaded version and commit to GitHub.');
+// Save holiday to server API
+async function saveHolidayToServer(holiday) {
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(holiday)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to save holiday');
+        }
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('Error saving holiday:', error);
+        throw error;
+    }
 }
-
-const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December'];
-const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function renderCalendar() {
     const calendar = document.getElementById('calendar');
@@ -245,7 +247,7 @@ function closeModal() {
     document.getElementById('addModal').classList.remove('active');
 }
 
-function addHoliday(event) {
+async function addHoliday(event) {
     event.preventDefault();
     
     const selectedPerson = document.getElementById('personName').value;
@@ -259,26 +261,28 @@ function addHoliday(event) {
     // }
     
     const holiday = {
-        id: nextHolidayId++,
         person: selectedPerson,
         startDate: document.getElementById('startDate').value,
         endDate: document.getElementById('endDate').value,
-        type: document.getElementById('holidayType').value,
-        createdAt: new Date().toISOString()
+        type: document.getElementById('holidayType').value
     };
     
-    holidays.push(holiday);
-    
-    // Save to JSON file
-    saveHolidays();
-    
-    closeModal();
-    renderCalendar();
-    
-    // Reset form
-    event.target.reset();
-    
-    alert(`✅ Holiday added for ${selectedPerson}!\n\n📥 A new holidays.json file has been downloaded.\n\nPlease:\n1. Replace the old holidays.json with the downloaded file\n2. Commit and push to GitHub\n3. Refresh the page to see updates`);
+    try {
+        // Save to server
+        await saveHolidayToServer(holiday);
+        
+        // Reload holidays from server
+        await loadHolidays();
+        
+        closeModal();
+        
+        // Reset form
+        event.target.reset();
+        
+        alert(`✅ Holiday added successfully for ${selectedPerson}!`);
+    } catch (error) {
+        alert('❌ Failed to add holiday. Please try again.');
+    }
 }
 
 function exportCalendar() {
@@ -291,7 +295,7 @@ function exportCalendar() {
     link.click();
 }
 
-// Load holidays from JSON file on startup
+// Load holidays from server on startup
 window.onload = function() {
     loadHolidays();
 };

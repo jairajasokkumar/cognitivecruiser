@@ -31,8 +31,16 @@
       "endDate": "2026-06-05",
       "type": "Annual Leave",
       "createdAt": "2026-05-19T08:00:00Z"
+    },
+    {
+      "id": 5,
+      "person": "Alexander Joossens",
+      "startDate": "2026-04-15",
+      "endDate": "2026-04-15",
+      "type": "Personal Day",
+      "createdAt": "2026-05-19T13:35:51.071Z"
     }
   ],
-  "lastUpdated": "2026-05-19T08:00:00Z",
+  "lastUpdated": "2026-05-19T13:35:51.071Z",
   "version": "1.0"
 }
