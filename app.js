@@ -145,6 +145,7 @@ function createDayCell(day, isOtherMonth, isToday) {
                 item.innerHTML = `
                     <span class="holiday-name">${holiday.type}</span>
                     <span class="holiday-person">${holiday.person}</span>
+                    <button class="delete-holiday-btn" onclick="deleteHoliday(${holiday.id}, event)" title="Delete holiday">✕</button>
                 `;
                 holidaysList.appendChild(item);
             });
@@ -188,9 +189,15 @@ function filterByTeamMember() {
 }
 
 function updateStats() {
+    // Filter holidays that overlap with current month
     const monthHolidays = holidays.filter(h => {
         const start = new Date(h.startDate);
-        return start.getMonth() === currentMonth && start.getFullYear() === currentYear;
+        const end = new Date(h.endDate);
+        const monthStart = new Date(currentYear, currentMonth, 1);
+        const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+        
+        // Check if holiday overlaps with current month
+        return (start <= monthEnd && end >= monthStart);
     });
     
     document.getElementById('totalHolidays').textContent = monthHolidays.length;
@@ -200,11 +207,13 @@ function updateStats() {
     
     // Calculate next holiday
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
     const futureHolidays = holidays.filter(h => new Date(h.startDate) > today)
         .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
     
     if (futureHolidays.length > 0) {
         const nextDate = new Date(futureHolidays[0].startDate);
+        nextDate.setHours(0, 0, 0, 0);
         const daysUntil = Math.ceil((nextDate - today) / (1000 * 60 * 60 * 24));
         document.getElementById('nextHoliday').textContent = daysUntil;
     } else {
@@ -251,6 +260,9 @@ async function addHoliday(event) {
     event.preventDefault();
     
     const selectedPerson = document.getElementById('personName').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const type = document.getElementById('holidayType').value;
     
     // In production: Only allow users to add their own holidays
     // For demo purposes, we'll allow adding for any team member
@@ -260,11 +272,30 @@ async function addHoliday(event) {
     //     return;
     // }
     
+    // Check for overlapping holidays for the same person
+    const newStart = new Date(startDate);
+    const newEnd = new Date(endDate);
+    
+    const hasOverlap = holidays.some(h => {
+        if (h.person !== selectedPerson) return false;
+        
+        const existingStart = new Date(h.startDate);
+        const existingEnd = new Date(h.endDate);
+        
+        // Check if dates overlap
+        return (newStart <= existingEnd && newEnd >= existingStart);
+    });
+    
+    if (hasOverlap) {
+        alert(`❌ Cannot add holiday!\n\n${selectedPerson} already has a holiday booked during this period.\n\nPlease choose different dates.`);
+        return;
+    }
+    
     const holiday = {
         person: selectedPerson,
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        type: document.getElementById('holidayType').value
+        startDate: startDate,
+        endDate: endDate,
+        type: type
     };
     
     try {
@@ -299,6 +330,42 @@ function exportCalendar() {
 window.onload = function() {
     loadHolidays();
 };
+
+// Delete holiday function
+async function deleteHoliday(holidayId, event) {
+    event.stopPropagation(); // Prevent day cell click event
+    
+    const holiday = holidays.find(h => h.id === holidayId);
+    if (!holiday) {
+        alert('❌ Holiday not found!');
+        return;
+    }
+    
+    // Confirm deletion
+    const confirmDelete = confirm(`Are you sure you want to delete this holiday?\n\nPerson: ${holiday.person}\nDates: ${holiday.startDate} to ${holiday.endDate}\nType: ${holiday.type}`);
+    
+    if (!confirmDelete) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/${holidayId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete holiday');
+        }
+        
+        // Reload holidays from server
+        await loadHolidays();
+        
+        alert(`✅ Holiday deleted successfully!`);
+    } catch (error) {
+        console.error('Error deleting holiday:', error);
+        alert('❌ Failed to delete holiday. Please try again.');
+    }
+}
 
 // Simulate monthly email reminder (would be server-side in production)
 function checkMonthlyReminder() {

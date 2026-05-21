@@ -283,6 +283,30 @@ body {
     border-radius: 3px;
 }
 
+.delete-holiday-btn {
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+.delete-holiday-btn:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: #eb0a1e;
+    transform: scale(1.1);
+}
+
 /* Modal */
 .modal {
     display: none;
