@@ -7,7 +7,10 @@ const teamMembers = [
     'Edwin Brinza',
     'Iulia Caravasile',
     'Jairaj Kumar',
-    'Monica Besleaga'
+    'Monica Besleaga',
+    'Jim Hulders',
+    'Jasmina Magdic',
+    'Mats Moelants'
 ];
 
 // Current logged-in user (in production, this would come from authentication)
